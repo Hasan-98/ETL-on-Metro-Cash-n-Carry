@@ -1,0 +1,94 @@
+## q1
+
+select product_dim_table.product_name,supplier_dim_table.supplier_name
+,time_dim_table.quater,time_dim_table.month,
+sum(salesfact_table.totalprice) as Total_Sales from 
+salesfact_table
+join supplier_dim_table on salesfact_table.supplier_id=supplier_dim_table.supplier_id
+join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+group by salesfact_table.product_id,salesfact_table.supplier_id,time_dim_table.quater,
+time_dim_table.month;
+
+
+## q2
+
+##Query No. 2
+select product_dim_table.product_name,time_dim_table.month
+,sum(salesfact_table.totalprice) as Total_Sales from 
+salesfact_table
+join supplier_dim_table on salesfact_table.supplier_id=supplier_dim_table.supplier_id
+join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+where time_dim_table.year=2016 and supplier_dim_table.supplier_name="3M Company"
+group by time_dim_table.month,product_dim_table.product_id with rollup;
+
+
+## q3
+
+select salesfact_table.product_id,product_dim_table.product_name,
+sum(salesfact_table.quantity) as Products_Sold from 
+salesfact_table
+inner join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+inner join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+where time_dim_table.dayname='Saturday' or time_dim_table.dayname='Sunday'
+group by salesfact_table.product_id order by sum(salesfact_table.quantity) desc limit 5;
+
+
+## q4
+
+select quater1.product_name,
+quater1.Sales Quater1,
+quater2.Sales Quater2,
+quater3.Sales Quater3,
+ quater4.Sales Quater4 , 
+(quater1.Sales+quater2.Sales+quater3.Sales+quater4.Sales) as Yearly_Sales from 
+(select product_dim_table.product_id,product_dim_table.product_name,
+sum(salesfact_table.totalprice) as Sales
+from salesfact_table
+inner join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+inner join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+where time_dim_table.quater=1 and time_dim_table.year=2016 
+group by product_dim_table.product_id) quater1
+inner join 
+
+(select product_dim_table.product_id,product_dim_table.product_name,
+sum(salesfact_table.totalprice) as Sales
+from salesfact_table
+inner join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+inner join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+where time_dim_table.quater=2 and time_dim_table.year=2016 
+group by product_dim_table.product_id) quater2 on quater1.product_id=quater2.product_id
+inner join 
+(select product_dim_table.product_id,product_dim_table.product_name,sum(salesfact_table.totalprice)
+ as Sales
+from salesfact_table
+inner join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+inner join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+
+where time_dim_table.quater=3 and time_dim_table.year=2016 
+group by product_dim_table.product_id) quater3 on quater2.product_id=quater3.product_id
+inner join
+(select product_dim_table.product_id,product_dim_table.product_name,
+sum(salesfact_table.totalprice) as Sales
+from salesfact_table
+inner join product_dim_table on salesfact_table.product_id=product_dim_table.product_id
+inner join time_dim_table on salesfact_table.time_id=time_dim_table.time_id
+where time_dim_table.quater=4 and time_dim_table.year=2016 
+group by product_dim_table.product_id) quater4 on quater3.product_id=quater4.product_id
+order by quater1.product_name;
+
+## There are 5 duplicate tuples in the transactions data that's why instead of giving count 10000 it is giving 9995, in order to remove this anomaly a primary 
+key e.g in this case transaction id should be introduced to distinguish each tuple uniquily;
+
+
+
+
+
+## Query No. 6 ##
+
+create table STOREANALYSIS_MV  
+select store_id,product_id as Prod_ID, sum(totalprice) as Sales_Total from salesfact_table
+group by store_id,product_id;
+DROP TABLE STOREANALYSIS_MV;
+select * from STOREANALYSIS_MV;
